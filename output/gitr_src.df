@@ -1,0 +1,104 @@
+from gitr_deps_image as stage_0
+
+# Dependencies: all this should be downloaded from within the CMake
+
+# clone
+run --mount=type=ssh git clone git@github.com:hyperrealm/libconfig.git
+
+# build - this uses the newest version, not the one tested
+ run ["bash", "-c", \
+      " \
+      pushd libconfig && \
+      mkdir build && \
+      pushd build && \
+      cmake .. && make && make install" ]
+
+# clone
+run --mount=type=ssh git clone git@github.com:Unidata/netcdf-c.git
+
+# build
+ run ["bash", "-c", \
+      " \
+      pushd netcdf-c && \
+      mkdir build && \
+      pushd build && \
+      cmake -DENABLE_DAP=OFF .. && make && make install" ]
+
+# clone
+run --mount=type=ssh git clone git@github.com:Unidata/netcdf-cxx4.git
+
+# build
+ run ["bash", "-c", \
+      " \
+      pushd netcdf-cxx4 && \
+      mkdir build && \
+      pushd build && \
+      cmake .. && make && make install"]
+
+# clone - no build necessary
+run --mount=type=ssh git clone git@github.com:NVIDIA/thrust.git
+
+# Checkpoint here
+from stage_0 as stage_1
+# Main repo:
+
+# clone
+run --mount=type=ssh git clone git@github.com:ORNL-Fusion/GITR.git
+
+# build
+run ["bash", "-c", \
+     " \
+     pushd GITR/build && \
+     cmake -DUSE_CUDA=0 \
+     -DUSE_MPI=1 \
+     -DUSEIONIZATION=0 \
+     -DUSERECOMBINATION=0 \
+     -DUSEPERPDIFFUSION=0 \
+     -DUSECOULOMBCOLLISIONS=1 \
+     -DUSEFRICTION=1 \
+     -DUSEANGLESCATTERING=1 \
+     -DUSEHEATING=1 \
+     -DUSETHERMALFORCE=0 \
+     -DUSESURFACEMODEL=0 \
+     -DUSESHEATHEFIELD=0 \
+     -DBIASED_SURFACE=0 \
+     -DUSE_SURFACE_POTENTIAL=0 \
+     -DUSEPRESHEATHEFIELD=0 \
+     -DBFIELD_INTERP=0 \
+     -DLC_INTERP=0 \
+     -DGENERATE_LC=0 \
+     -DEFIELD_INTERP=0 \
+     -DPRESHEATH_INTERP=0 \
+     -DDENSITY_INTERP=0 \
+     -DTEMP_INTERP=0 \
+     -DFLOWV_INTERP=2 \
+     -DGRADT_INTERP=0 \
+     -DODEINT=0 \
+     -DFIXEDSEEDS=0 \
+     -DPARTICLESEEDS=1 \
+     -DGEOM_TRACE=0 \
+     -DGEOM_HASH=0 \
+     -DGEOM_HASH_SHEATH=0 \
+     -DPARTICLE_TRACKS=0 \
+     -DPARTICLE_SOURCE=0 \
+     -DPARTICLE_SOURCE_SPACE=0 \
+     -DPARTICLE_SOURCE_ENERGY=0 \
+     -DPARTICLE_SOURCE_ANGLE=0 \
+     -DPARTICLE_SOURCE_FILE=1 \
+     -DSPECTROSCOPY=0 \
+     -DUSE3DTETGEOM=0 \
+     -DUSECYLSYMM=0 \
+     -DUSEFIELDALIGNEDVALUES=0 \
+     -DFLUX_EA=1 \
+     -DFORCE_EVAL=0 \
+     -DUSE_SORT=0 \
+     -DCHECK_COMPATIBILITY=1 \
+     -DTHRUST_INCLUDE_DIR=/thrust \
+     -DNETCDF_INCLUDE_DIR=/netcdf-c/include \
+     -DNETCDF_LIBRARY=/usr/local/lib/libnetcdf.so \
+     -DNETCDF_CXX_INCLUDE_DIR=/usr/local/include \
+     -DNETCDF_CXX_LIBRARY=/usr/local/lib/libnetcdf-cxx4.so \
+     .. && make -j 4 && make install"]
+
+# make a volume mount:
+volume [ "/output" ]

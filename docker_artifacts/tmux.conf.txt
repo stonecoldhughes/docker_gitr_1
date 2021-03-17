@@ -1,0 +1,57 @@
+# ~/.tmux.conf
+
+# unbind default prefix and set it to ctrl-a
+unbind C-b
+set -g prefix C-a
+bind C-a send-prefix
+
+# make delay shorter
+set -sg escape-time 0
+
+#### key bindings ####
+
+# reload config file
+bind -n M-r source-file ~/.tmux.conf \; display ".tmux.conf reloaded!"
+
+# quickly open and navigate windows
+bind -n M-c new-window
+bind -n M-p previous-window
+bind -n M-n next-window
+bind -n M-o rotate-window
+
+# pane operations
+bind -n M-y setw synchronize-panes
+bind -n M-x kill-pane
+bind -n M-b break-pane
+bind -n M-Up resize-pane -U
+bind -n M-Down resize-pane -D
+bind -n M-Left resize-pane -L
+bind -n M-Right resize-pane -R
+bind -n M-1 select-layout even-horizontal
+bind -n M-2 select-layout even-vertical
+bind -n M-3 select-layout main-horizontal
+bind -n M-4 select-layout main-vertical
+bind -n M-5 select-layout tiled
+bind -n M-6 next-layout
+
+# pane movement shortcuts (same as vim)
+bind -n M-h select-pane -L
+bind -n M-j select-pane -D
+bind -n M-k select-pane -U
+bind -n M-l select-pane -R
+
+# loud or quiet?
+set -g visual-activity off
+set -g visual-bell off
+set -g visual-silence off
+setw -g monitor-activity off
+set -g bell-action none
+
+# scrollback size
+set -g history-limit 10000
+
+# split panes using | and -
+bind -n M-\\ split-window -h
+bind -n M-- split-window -v
+unbind '"'
+unbind %

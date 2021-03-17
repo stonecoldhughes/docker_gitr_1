@@ -1,0 +1,56 @@
+# syntax = docker/dockerfile:1.0-experimental
+from teeks99/clang-ubuntu as stage_0
+
+env DEBIAN_FRONTEND noninteractive
+
+# general development packages
+run [ "bash", "-c", \
+      "apt-get update && \
+      apt-get install -y \
+      tmux \
+      git \
+      cmake \
+      vim \
+      g++ \
+      gdb" ]
+
+# local configuration files for tmux, vim, and ssh.
+copy [ "docker_artifacts/bash_rc_file.txt", "/root/.bashrc" ] 
+copy [ "docker_artifacts/tmux.conf.txt", "/root/.tmux.conf"]
+copy [ "docker_artifacts/vimrc.txt", "/root/.vimrc"]
+
+# Technically the hdf5 you installed is the wrong one for the mpich you
+# installed there... note this and fix...
+run [ "bash", "-c", \
+       "apt-get update && \
+        apt-get install -y mpich && \
+        apt-get install -y libhdf5-dev && \
+        apt-get install -y m4 " ]
+
+from stage_0 as stage_1
+
+volume [ "/output" ]
+
+run --mount=type=secret,id=github_repo_access_token,dst=/github_repo_access_token.txt \
+    git clone https://stonecoldhughes:$(cat /github_repo_access_token.txt)@github.com/stonecoldhughes/GITR.git
+    
+
+from stage_1 as stage_2
+
+
+run --mount=type=secret,id=repo_access_token,dst=/repo_access_token.txt \
+      cd GITR && \
+      git config --global core.editor vim && \
+      git config --global user.name null && \ 
+      git config --global user.email null && \
+      git remote add official https://github.com/ORNL-Fusion/GITR.git && \
+      git remote add dev https://stonecoldhughes:$(cat /repo_access_token.txt)@github.com/stonecoldhughes/GITR.git && \
+      git remote rm origin
+
+from stage_2 as stage_3
+
+run ["bash", "-c", \
+      " \
+      cd GITR && \
+      git fetch dev && \
+      git checkout prototype/build_system"]
